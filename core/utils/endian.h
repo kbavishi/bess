@@ -44,19 +44,45 @@ template <typename T>
 class[[gnu::packed]] BigEndian final : public EndianBase<T> {
  public:
   BigEndian() = default;
-  BigEndian(const T &value) : value_(value) {}
+  BigEndian(const BigEndian<T> &o) = default;
 
-  constexpr T to_cpu() const {
-    return is_be_system() ? value_ : EndianBase<T>::swap(value_);
+  constexpr BigEndian(const T &cpu_value)
+      : data_(is_be_system() ? cpu_value : EndianBase<T>::swap(cpu_value)) {}
+
+  BigEndian<T> &operator=(const T &cpu_value) {
+    data_ = is_be_system() ? cpu_value : EndianBase<T>::swap(cpu_value);
+    return *this;
   }
 
-  static constexpr T to_cpu(const T &v) {
-    return is_be_system() ? v : EndianBase<T>::swap(v);
+  constexpr T to_cpu() {
+    return is_be_system() ? data_ : EndianBase<T>::swap(data_);
   }
+
+  constexpr bool operator==(const BigEndian &o) { return data_ == o.data_; }
+
+  constexpr bool operator!=(const BigEndian &o) { return !(*this == o); }
+
+  constexpr friend bool operator==(const BigEndian<T> &l, const T &r) {
+    return __builtin_constant_p(r) ? (l == BigEndian<T>(r)) : l.to_cpu() == r;
+  };
+
+  constexpr friend bool operator==(const T &l, const BigEndian<T> &r) {
+    return r == l;
+  };
 
  protected:
-  T value_;
+  T data_;  // stored in big endian in memory
 };
+
+template <typename T>
+constexpr bool operator!=(const BigEndian<T> &l, const T &r) {
+  return !(l == r);
+}
+
+template <typename T>
+constexpr bool operator!=(const T &l, const BigEndian<T> &r) {
+  return !(l == r);
+}
 
 using be16_t = BigEndian<uint16_t>;
 using be32_t = BigEndian<uint32_t>;
@@ -71,6 +97,9 @@ static_assert(std::is_pod<be64_t>::value, "not a POD type");
 static_assert(sizeof(be16_t) == 2, "be16_t is not 2 bytes");
 static_assert(sizeof(be32_t) == 4, "be32_t is not 4 bytes");
 static_assert(sizeof(be64_t) == 8, "be64_t is not 8 bytes");
+
+// this is to make sure BigEndian has constexpr constructor and to_cpu()
+static_assert(be32_t(0x1234).to_cpu() == 0x1234, "Something is wrong");
 
 }  // namespace utils
 }  // namespace bess
