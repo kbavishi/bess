@@ -6,6 +6,7 @@
 
 #include "../module.h"
 #include "../module_msg.pb.h"
+#include "../utils/ip.h"
 #include "../utils/random.h"
 
 typedef std::pair<uint64_t, struct flow *> Event;
@@ -18,7 +19,7 @@ struct flow {
   int first;
   uint32_t next_seq_no;
   /* Note that these are in NETWORK ORDER */
-  uint32_t src_ip, dst_ip;
+  bess::utils::be32_t src_ip, dst_ip;
   uint16_t src_port, dst_port;
 };
 

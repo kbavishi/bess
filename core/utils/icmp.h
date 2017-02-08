@@ -5,11 +5,11 @@ namespace utils {
 
 // A basic ICMP header definition.
 struct[[gnu::packed]] IcmpHeader {
-  uint16_t type;      // ICMP packet type.
-  uint16_t code;      // ICMP packet type.
-  uint16_t checksum;  // ICMP packet checksum.
-  uint16_t ident;     // ICMP packet identifier.
-  uint16_t seq_num;   // ICMP packet sequence number
+  uint8_t type;      // ICMP packet type.
+  uint8_t code;      // ICMP packet type.
+  be16_t checksum;  // ICMP packet checksum.
+  be16_t ident;     // ICMP packet identifier.
+  be16_t seq_num;   // ICMP packet sequence number
 };
 
 }  // namespace utils

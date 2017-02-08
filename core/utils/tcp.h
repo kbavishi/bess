@@ -13,10 +13,10 @@ namespace utils {
 
 // A basic TCP header definition loosely based on the BSD version.
 struct [[gnu::packed]] TcpHeader {
-  uint16_t src_port;    // Source port.
-  uint16_t dst_port;    // Destination port.
-  uint32_t seq_num;     // Sequence number.
-  uint32_t ack_num;     // Acknowledgement number.
+  be16_t src_port;    // Source port.
+  be16_t dst_port;    // Destination port.
+  be32_t seq_num;     // Sequence number.
+  be32_t ack_num;     // Acknowledgement number.
 #if __BYTE_ORDER == __LITTLE_ENDIAN
   uint8_t reserved:4;   // Unused reserved bits.
   uint8_t offset:4;     // Data offset.
@@ -27,9 +27,9 @@ struct [[gnu::packed]] TcpHeader {
 #error __BYTE_ORDER must be defined.
 #endif
   uint8_t flags;        // Flags.
-  uint16_t window;      // Receive window.
-  uint16_t checksum;    // Checksum.
-  uint16_t urgent_ptr;  // Urgent pointer.
+  be16_t window;      // Receive window.
+  be16_t checksum;    // Checksum.
+  be16_t urgent_ptr;  // Urgent pointer.
 };
 
 }  // namespace utils

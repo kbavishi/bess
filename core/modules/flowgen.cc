@@ -92,10 +92,10 @@ inline struct flow *FlowGen::ScheduleFlow(uint64_t time_ns) {
 
   f->first = 1;
   f->next_seq_no = 12345;
-  f->src_ip = htonl(ip_src_base_ + rng_.GetRange(ip_src_range_));
-  f->dst_ip = htonl(ip_dst_base_ + rng_.GetRange(ip_dst_range_));
-  f->src_port = htons(port_src_base_ + rng_.GetRange(port_src_range_));
-  f->dst_port = htons(port_src_base_ + rng_.GetRange(port_dst_range_));
+  f->src_ip = ip_src_base_ + rng_.GetRange(ip_src_range_);
+  f->dst_ip = ip_dst_base_ + rng_.GetRange(ip_dst_range_);
+  f->src_port = port_src_base_ + rng_.GetRange(port_src_range_);
+  f->dst_port = port_src_base_ + rng_.GetRange(port_dst_range_);
 
   /* compensate the fraction part by adding [0.0, 1.0) */
   f->packets_left = NewFlowPkts() + rng_.GetReal();
@@ -411,10 +411,10 @@ pb_error_t FlowGen::UpdateBaseAddresses() {
       reinterpret_cast<bess::utils::TcpHeader *>(
           p + sizeof(bess::utils::EthHeader) + sizeof(bess::utils::Ipv4Header));
 
-  ip_src_base_ = ntohl(ipheader->src);
-  ip_dst_base_ = ntohl(ipheader->dst);
-  port_src_base_ = ntohs(tcpheader->src_port);
-  port_dst_base_ = ntohs(tcpheader->dst_port);
+  ip_src_base_ = ipheader->src.value();
+  ip_dst_base_ = ipheader->dst.value();
+  port_src_base_ = tcpheader->src_port.value();
+  port_dst_base_ = tcpheader->dst_port.value();
   return pb_errno(0);
 }
 
@@ -448,7 +448,7 @@ bess::Packet *FlowGen::FillPacket(struct flow *f) {
   if (f->first || f->packets_left <= 1) {  // syn or fin
     pkt->set_total_len(60);                /*eth + ip + tcp*/
     pkt->set_data_len(60);                 /*eth + ip + tcp*/
-    ipheader->length = (uint16_t)htons(40);
+    ipheader->length = 40;
   } else {
     pkt->set_data_off(SNBUF_HEADROOM);
     pkt->set_total_len(size);
@@ -468,7 +468,7 @@ bess::Packet *FlowGen::FillPacket(struct flow *f) {
   tcpheader->dst_port = f->dst_port;
 
   tcpheader->flags = tcp_flags;
-  tcpheader->seq_num = htonl(f->next_seq_no);
+  tcpheader->seq_num = f->next_seq_no;
 
   f->next_seq_no += f->first ? 1 : size - (14 + 20 + 20); /* eth + ip + tcp*/
 

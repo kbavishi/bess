@@ -61,10 +61,9 @@ static PacketTemplate rst_template;
 // Generate an HTTP 403 packet
 inline static bess::Packet *Generate403Packet(const EthHeader::Address &src_eth,
                                               const EthHeader::Address &dst_eth,
-                                              uint32_t src_ip, uint32_t dst_ip,
-                                              uint16_t src_port,
-                                              uint16_t dst_port, uint32_t seq,
-                                              uint32_t ack) {
+                                              be32_t src_ip, be32_t dst_ip,
+                                              be16_t src_port, be16_t dst_port,
+                                              be32_t seq, be32_t ack) {
   bess::Packet *pkt = bess::Packet::Alloc();
   char *ptr = static_cast<char *>(pkt->buffer()) + SNBUF_HEADROOM;
   pkt->set_data_off(SNBUF_HEADROOM);
@@ -102,8 +101,8 @@ inline static bess::Packet *Generate403Packet(const EthHeader::Address &src_eth,
 // Generate a TCP RST packet
 inline static bess::Packet *GenerateResetPacket(
     const EthHeader::Address &src_eth, const EthHeader::Address &dst_eth,
-    uint32_t src_ip, uint32_t dst_ip, uint16_t src_port, uint16_t dst_port,
-    uint32_t seq, uint32_t ack) {
+    be32_t src_ip, be32_t dst_ip, be16_t src_port, be16_t dst_port,
+    be32_t seq, be32_t ack) {
   bess::Packet *pkt = bess::Packet::Alloc();
   char *ptr = static_cast<char *>(pkt->buffer()) + SNBUF_HEADROOM;
   pkt->set_data_off(SNBUF_HEADROOM);
@@ -281,7 +280,8 @@ void UrlFilter::ProcessBatch(bess::PacketBatch *batch) {
       // Inject RST to source
       out_batches[3].add(GenerateResetPacket(
           eth->dst_addr, eth->src_addr, ip->dst, ip->src, tcp->dst_port,
-          tcp->src_port, tcp->ack_num + strlen(HTTP_403_BODY), tcp->seq_num));
+          tcp->src_port, be32_t(tcp->ack_num.value() + strlen(HTTP_403_BODY)),
+          tcp->seq_num));
 
       // Drop the data packet
       free_batch.add(pkt);

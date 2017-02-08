@@ -28,7 +28,6 @@ CIDRNetwork::CIDRNetwork(const std::string &cidr) {
   } else {
     mask = ~((1 << (32 - len)) - 1);
   }
-  mask = htonl(mask);
 }
 
 }  // namespace utils

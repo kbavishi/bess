@@ -24,8 +24,8 @@ const Commands NAT::cmds = {
     {"clear", "EmptyArg", MODULE_CMD_FUNC(&NAT::CommandClear), 0}};
 
 std::string Flow::ToString() const {
-  return bess::utils::Format("%d %08x:%d -> %08x:%d", proto, src_ip, src_port,
-                             dst_ip, dst_port);
+  return bess::utils::Format("%d %08x:%hu -> %08x:%hu", proto, src_ip.value(),
+                             src_port.value(), dst_ip.value(), dst_port.value());
 }
 
 pb_error_t NAT::Init(const bess::pb::NATArg &arg) {
@@ -175,7 +175,8 @@ void NAT::ProcessBatch(bess::PacketBatch *batch) {
       auto *res = flow_hash_.Find(flow);
       if (res != nullptr) {
         FlowRecord *record = res->second;
-        DCHECK_EQ(record->external_flow.src_port, record->port);
+        DCHECK_EQ(record->external_flow.src_port.value(), record->port.value());
+
         if (now - record->time < TIME_OUT_NS) {
           // Entry exists and does not exceed timeout
           record->time = now;
@@ -250,8 +251,8 @@ void NAT::ProcessBatch(bess::PacketBatch *batch) {
       continue;
     }
 
-    IPAddress new_ip;
-    uint16_t new_port;
+    be32_t new_ip;
+    be16_t new_port;
     FlowRecord *record;
     std::tie(new_ip, new_port, record) = available_ports.RandomFreeIPAndPort();
 
