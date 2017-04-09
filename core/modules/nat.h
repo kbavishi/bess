@@ -17,8 +17,8 @@
 #include "../utils/ip.h"
 #include "../utils/random.h"
 
-using bess::utils::IPAddress;
-using bess::utils::CIDRNetwork;
+using bess::utils::Ipv4Address;
+using bess::utils::Ipv4Prefix;
 using bess::utils::HashResult;
 using bess::utils::CuckooMap;
 
@@ -37,8 +37,8 @@ class alignas(16) Flow {
  public:
   union {
     struct {
-      IPAddress src_ip;
-      IPAddress dst_ip;
+      Ipv4Address src_ip;
+      Ipv4Address dst_ip;
       union {
         uint16_t src_port;
         uint16_t icmp_ident;  // identifier of ICMP query
@@ -99,7 +99,7 @@ class FlowRecord {
 class AvailablePorts {
  public:
   // Tracks available ports within the given IP prefix.
-  explicit AvailablePorts(const CIDRNetwork &prefix)
+  explicit AvailablePorts(const Ipv4Prefix &prefix)
       : prefix_(prefix),
         records_(),
         free_list_(),
@@ -120,7 +120,7 @@ class AvailablePorts {
 
   // Returns a random free IP/port pair within the network and removes it from
   // the free list.
-  std::tuple<IPAddress, uint16_t, FlowRecord *> RandomFreeIPAndPort() {
+  std::tuple<Ipv4Address, uint16_t, FlowRecord *> RandomFreeIPAndPort() {
     uint32_t ip;
     uint16_t port;
 
@@ -134,7 +134,7 @@ class AvailablePorts {
   }
 
   // Adds the index of given IP/port pair back to the free list.
-  void FreeAllocated(const std::tuple<IPAddress, uint16_t, FlowRecord *> &a) {
+  void FreeAllocated(const std::tuple<Ipv4Address, uint16_t, FlowRecord *> &a) {
     uint32_t ip = ntohl(std::get<0>(a));
     uint16_t port = ntohs(std::get<1>(a));
     free_list_.emplace_back(ip, port);
@@ -143,14 +143,14 @@ class AvailablePorts {
   // Returns true if there are no free remaining IP/port pairs.
   bool empty() const { return free_list_.empty(); }
 
-  const CIDRNetwork &prefix() const { return prefix_; }
+  const Ipv4Prefix &prefix() const { return prefix_; }
 
   uint64_t next_expiry() const { return next_expiry_; }
 
   void set_next_expiry(uint64_t next_expiry) { next_expiry_ = next_expiry; }
 
  private:
-  CIDRNetwork prefix_;
+  Ipv4Prefix prefix_;
   std::vector<FlowRecord> records_;
   std::vector<std::pair<uint32_t, uint16_t>> free_list_;
   uint64_t next_expiry_;
@@ -191,15 +191,15 @@ class NAT final : public Module {
  private:
   void InitRules(const bess::pb::NATArg &arg) {
     for (const auto &rule : arg.rules()) {
-      CIDRNetwork int_net(rule.internal_addr_block());
-      CIDRNetwork ext_net(rule.external_addr_block());
+      Ipv4Prefix int_net(rule.internal_addr_block());
+      Ipv4Prefix ext_net(rule.external_addr_block());
       rules_.emplace_back(std::piecewise_construct,
                           std::forward_as_tuple(int_net),
                           std::forward_as_tuple(ext_net));
     }
   }
 
-  std::vector<std::pair<CIDRNetwork, AvailablePorts>> rules_;
+  std::vector<std::pair<Ipv4Prefix, AvailablePorts>> rules_;
   CuckooMap<Flow, FlowRecord *, FlowHash> flow_hash_;
   Random rng_;
 };

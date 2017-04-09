@@ -167,7 +167,7 @@ void NAT::ProcessBatch(bess::PacketBatch *batch) {
 
     const auto rule_it =
         std::find_if(rules_.begin(), rules_.end(),
-                     [&ip](const std::pair<CIDRNetwork, AvailablePorts> &rule) {
+                     [&ip](const std::pair<Ipv4Prefix, AvailablePorts> &rule) {
                        return rule.first.Match(ip->src);
                      });
 
@@ -250,7 +250,7 @@ void NAT::ProcessBatch(bess::PacketBatch *batch) {
       continue;
     }
 
-    IPAddress new_ip;
+    Ipv4Address new_ip;
     uint16_t new_port;
     FlowRecord *record;
     std::tie(new_ip, new_port, record) = available_ports.RandomFreeIPAndPort();

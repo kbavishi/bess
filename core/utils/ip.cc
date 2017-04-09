@@ -7,7 +7,7 @@
 namespace bess {
 namespace utils {
 
-CIDRNetwork::CIDRNetwork(const std::string &cidr) {
+Ipv4Prefix::Ipv4Prefix(const std::string &cidr) {
   if (cidr.length() == 0) {
     addr = 0;
     mask = 0;

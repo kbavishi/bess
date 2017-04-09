@@ -13,8 +13,8 @@ const Commands ACL::cmds = {
 pb_error_t ACL::Init(const bess::pb::ACLArg &arg) {
   for (const auto &rule : arg.rules()) {
     ACLRule new_rule = {
-        .src_ip = CIDRNetwork(rule.src_ip()),
-        .dst_ip = CIDRNetwork(rule.dst_ip()),
+        .src_ip = Ipv4Prefix(rule.src_ip()),
+        .dst_ip = Ipv4Prefix(rule.dst_ip()),
         .src_port = htons(static_cast<uint16_t>(rule.src_port())),
         .dst_port = htons(static_cast<uint16_t>(rule.dst_port())),
         .established = rule.established(),
@@ -49,8 +49,8 @@ void ACL::ProcessBatch(bess::PacketBatch *batch) {
     struct udp_hdr *udp = reinterpret_cast<struct udp_hdr *>(
         reinterpret_cast<uint8_t *>(ip) + ip_bytes);
 
-    IPAddress src_ip = ip->src_addr;
-    IPAddress dst_ip = ip->dst_addr;
+    Ipv4Address src_ip = ip->src_addr;
+    Ipv4Address dst_ip = ip->dst_addr;
     uint16_t src_port = udp->src_port;
     uint16_t dst_port = udp->dst_port;
 

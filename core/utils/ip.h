@@ -7,20 +7,20 @@
 namespace bess {
 namespace utils {
 
-typedef uint32_t IPAddress;
+using Ipv4Address = uint32_t;
 
-struct CIDRNetwork {
+struct Ipv4Prefix {
   // Implicit default constructor is not allowed
-  CIDRNetwork() = delete;
+  Ipv4Prefix() = delete;
 
-  // Construct CIDRNetwork from a string like "192.168.0.1/24"
-  explicit CIDRNetwork(const std::string& cidr);
+  // Construct Ipv4Prefix from a string like "192.168.0.1/24"
+  explicit Ipv4Prefix(const std::string& cidr);
 
-  // Returns true if ip is within the range of CIDRNetwork
-  bool Match(const IPAddress& ip) const { return (addr & mask) == (ip & mask); }
+  // Returns true if ip is within the range of Ipv4Prefix
+  bool Match(const Ipv4Address& ip) const { return (addr & mask) == (ip & mask); }
 
-  IPAddress addr;
-  IPAddress mask;
+  Ipv4Address addr;
+  Ipv4Address mask;
 };
 
 // An IPv4 header definition loosely based on the BSD version.
