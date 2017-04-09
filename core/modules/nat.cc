@@ -175,7 +175,6 @@ void NAT::ProcessBatch(bess::PacketBatch *batch) {
       auto *res = flow_hash_.Find(flow);
       if (res != nullptr) {
         FlowRecord *record = res->second;
-        DCHECK_EQ(record->external_flow.src_port, record->port);
         if (now - record->time < TIME_OUT_NS) {
           // Entry exists and does not exceed timeout
           record->time = now;
@@ -198,8 +197,9 @@ void NAT::ProcessBatch(bess::PacketBatch *batch) {
             flow_hash_.Remove(record->internal_flow);
           }
           AvailablePorts &available_ports = rule_it->second;
-          available_ports.FreeAllocated(std::make_tuple(
-              record->external_flow.src_ip, record->port, record));
+          available_ports.FreeAllocated(
+              std::make_tuple(record->external_flow.src_ip,
+                              record->external_flow.src_port, record));
         }
       }
     }
@@ -255,7 +255,6 @@ void NAT::ProcessBatch(bess::PacketBatch *batch) {
     FlowRecord *record;
     std::tie(new_ip, new_port, record) = available_ports.RandomFreeIPAndPort();
 
-    record->port = new_port;
     record->time = now;
     record->internal_flow = flow;     // Copy
     flow_hash_.Insert(flow, record);  // Copy

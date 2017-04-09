@@ -88,9 +88,8 @@ class FlowRecord {
   Flow internal_flow;
   Flow external_flow;
   uint64_t time;
-  uint16_t port;
 
-  FlowRecord() : internal_flow(), external_flow(), time(), port() {}
+  FlowRecord() : internal_flow(), external_flow(), time() {}
 };
 
 // A data structure to track available ports for a given subnet of external IPs
@@ -201,7 +200,6 @@ class NAT final : public Module {
 
   std::vector<std::pair<Ipv4Prefix, AvailablePorts>> rules_;
   CuckooMap<Flow, FlowRecord *, FlowHash> flow_hash_;
-  Random rng_;
 };
 
 #endif  // BESS_MODULES_NAT_H_
