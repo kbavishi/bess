@@ -53,6 +53,10 @@ struct[[gnu::packed]] Ipv4Header {
   uint32_t dst;              // Destination address.
 };
 
+static_assert(std::is_pod<Ipv4Header>::value, "not a POD type");
+static_assert(std::is_pod<Ipv4Address>::value, "not a POD type");
+static_assert(sizeof(Ipv4Header) == 20, "Ipv4Header is incorrect");
+
 }  // namespace utils
 }  // namespace bess
 
