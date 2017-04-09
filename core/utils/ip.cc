@@ -28,7 +28,9 @@ Ipv4Prefix::Ipv4Prefix(const std::string &cidr) {
   } else {
     mask = ~((1 << (32 - len)) - 1);
   }
+
   mask = htonl(mask);
+  addr = addr & mask;
 }
 
 }  // namespace utils

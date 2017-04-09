@@ -13,12 +13,15 @@ struct Ipv4Prefix {
   // Implicit default constructor is not allowed
   Ipv4Prefix() = delete;
 
-  // Construct Ipv4Prefix from a string like "192.168.0.1/24"
+  // Construct Ipv4Prefix from a string like "192.168.0.0/24"
+  // The host address part is zeroed implicitly.
+  // (e.g., 192.168.10.123/24 -> 192.168.10.0/24)
   explicit Ipv4Prefix(const std::string& cidr);
 
   // Returns true if ip is within the range of Ipv4Prefix
-  bool Match(const Ipv4Address& ip) const { return (addr & mask) == (ip & mask); }
+  bool Match(const Ipv4Address& ip) const { return addr == (ip & mask); }
 
+  // addr is already masked, i.e., addr & mask == addr
   Ipv4Address addr;
   Ipv4Address mask;
 };
