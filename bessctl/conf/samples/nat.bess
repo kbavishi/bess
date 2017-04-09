@@ -3,32 +3,39 @@
 import scapy.all as scapy
 import socket
 
+# generate flows by varying src IP addr
+num_flows = int($BESS_FLOWS!'1')
+assert(1 <= num_flows <= 256 ** 3)
+
+oneway = int($BESS_ONEWAY!'0')
+assert(oneway in [0, 1])
+
+pkt_size = int($SN_PKT_SIZE!'60')
+
 def aton(ip):
     return socket.inet_aton(ip)
 
 # Craft a packet with the specified IP addresses
-def gen_packet(proto, src_ip, dst_ip):
+def gen_packet(proto, src_ip, dst_ip, size):
     eth = scapy.Ether(src='02:1e:67:9f:4d:ae', dst='06:16:3e:1b:72:32')
     ip = scapy.IP(src=src_ip, dst=dst_ip)
-    udp = proto(sport=10001, dport=10002)
-    payload = 'helloworld'
-    pkt = eth/ip/udp/payload
+    l4 = proto(sport=10001, dport=10002)
+    payload = ('hello' + '0123456789' * 200)[:size-len(eth/ip/l4)]
+    pkt = eth/ip/l4/payload
     return str(pkt)
 
-packets = [gen_packet(scapy.UDP, '172.16.100.1', '10.0.0.1'),
-           gen_packet(scapy.UDP, '172.12.55.99', '12.34.56.78'),
-           gen_packet(scapy.UDP, '172.12.55.99', '10.0.0.1'),
-           gen_packet(scapy.UDP, '172.16.100.1', '12.34.56.78'),
-           gen_packet(scapy.TCP, '172.12.55.99', '12.34.56.78'),
-           gen_packet(scapy.UDP, '192.168.1.123', '12.34.56.78'),
-          ]
 
-nat::NAT(rules=[{'internal_addr_block':'0.0.0.0/0', 'external_addr_block':'192.168.1.1/32'}])
+nat::NAT(rules=[{'internal_addr_block':'0.0.0.0/0',
+                 'external_addr_block':'192.168.1.1/32'}])
 
-# Swap src/dst MAC
-mac::MACSwap()
+Source() \
+    -> Rewrite(templates=[gen_packet(scapy.TCP, '10.0.0.1', '172.16.100.101',
+                                     pkt_size)]) \
+    -> RandomUpdate(fields=[{'offset': 26, 'size': 4, 'min': 0x0a000001,
+                             'max': 0x0a000001 + num_flows - 1}]) \
+    -> 0:nat
 
-# Swap src/dst IP addresses / ports
-ip::IPSwap()
-
-Source() -> Rewrite(templates=packets) -> 0:nat:0 -> mac -> ip -> 1:nat:1 -> Sink()
+if oneway:
+    nat:0 -> Sink()
+else:
+    nat:0 -> MACSwap() -> IPSwap() -> 1:nat:1 -> Sink()
